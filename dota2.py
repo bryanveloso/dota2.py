@@ -268,3 +268,15 @@ class Dota2API(object):
             match_id=match_id,
         )
         return self.__request('get', url, params=params).get('result')
+
+    def get_league_listing(self):
+        url = '/IDOTA2Match_570/GetLeagueListing/v001'
+        return (self.__request('get', url)
+                .get('result', {})
+                .get('leagues', []))
+
+    def get_live_league_games(self):
+        url = '/IDOTA2Match_570/GetLiveLeagueGames/v001'
+        return (self.__request('get', url)
+                .get('result', {})
+                .get('games', []))

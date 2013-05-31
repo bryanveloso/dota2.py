@@ -156,25 +156,25 @@ class Dota2API(object):
             date = time.mktime(date.timetuple())
         return int(date)
 
-    def get_player_summaries(self, steam_ids):
-        url = '/ISteamUser/GetPlayerSummaries/v0002'
+    def get_player_summaries(self, steam_ids, **params):
         if not type(steam_ids) == str:
             steam_ids = ','.join(map(str, steam_ids))
-        return self.__request('get', url, params=dict(
-            steams_ids=steam_ids,
-        ))
 
-    def get_heroes(self, language='en_us'):
+        url = '/ISteamUser/GetPlayerSummaries/v0002'
+        params.update(
+            steams_ids=steam_ids,
+        )
+        return self.__request('get', url, params=params)
+
+    def get_heroes(self, **params):
         url = '/IEconDOTA2_570/GetHeroes/v0001'
-        return self.__request('get', url, params=dict(
-            language=language,
-        ))
+        return self.__request('get', url, params=params)
 
     def get_match_history(self, player_name=None, hero_id=None, game_mode=None,
                           skill=0, date_min=None, date_max=None,
                           min_players=None, account_id=None, league_id=None,
                           start_at_match_id=None, matches_requested=25,
-                          tournament_games_only=None):
+                          tournament_games_only=None, **params):
 
         if hero_id:
             if type(hero_id) == 'str':
@@ -208,37 +208,44 @@ class Dota2API(object):
             req_count, last_req = 1, 25
 
         url = '/IDOTA2Match_570/GetMatchHistory/v001'
+        params.update(
+            player_name=player_name,
+            hero_id=hero_id,
+            game_mode=game_mode,
+            skill=skill,
+            date_min=date_min,
+            date_max=date_max,
+            min_players=min_players,
+            account_id=account_id,
+            league_id=league_id,
+            start_at_match_id=start_at_match_id,
+            matches_requested=matches_requested,
+            tournament_games_only=tournament_games_only,
+        )
+
         matches = []
         for i in range(req_count):
             if i + 1 == req_count and last_req > 0:
-                matches_requested = last_req
-            result = self.__request('get', url, params=dict(
-                player_name=player_name,
-                hero_id=hero_id,
-                game_mode=game_mode,
-                skill=skill,
-                date_min=date_min,
-                date_max=date_max,
-                min_players=min_players,
-                account_id=account_id,
-                league_id=league_id,
-                start_at_match_id=start_at_match_id,
-                matches_requested=matches_requested,
-                tournament_games_only=tournament_games_only,
-            ))
+                params.update(matches_requested=last_req)
+            result = self.__request('get', url, params=params)
             curr_matches = result.get('matches')
-            start_at_match_id = curr_matches[-1].get('match_id') - 1
+            if len(curr_matches) > 0:
+                params.update(
+                    start_at_match_id=curr_matches[-1].get('match_id') - 1,
+                )
             matches.extend(curr_matches)
             if result.get('results_remaining') < 1:
                 break
+
         result.update(
             matches=matches,
             num_results=len(matches),
         )
         return result
 
-    def get_match_details(self, match_id):
+    def get_match_details(self, match_id, **params):
         url = '/IDOTA2Match_570/GetMatchDetails/v001'
-        return self.__request('get', url, params=dict(
+        params.update(
             match_id=match_id,
-        ))
+        )
+        return self.__request('get', url, params=params)

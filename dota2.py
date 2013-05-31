@@ -134,6 +134,10 @@ MATCH_GAME_MODES = (
 )
 
 
+class Dota2APIError(Exception):
+    pass
+
+
 class Dota2API(object):
 
     base_url = 'https://api.steampowered.com'
@@ -149,26 +153,39 @@ class Dota2API(object):
         if not self.api_key:
             raise AttributeError('api_key not yet set')
         kwargs.setdefault('params', dict()).update(key=self.api_key)
-        return requests.request(method, url, **kwargs).json().get('result')
+        return requests.request(method, url, **kwargs).json()
 
     def __to_timestamp(self, date):
         if type(date) == datetime.datetime:
             date = time.mktime(date.timetuple())
         return int(date)
 
+    def get_steam_id(self, vanity_name, **params):
+        url = '/ISteamUser/ResolveVanityURL/v0001'
+        params.update(
+            vanityurl=vanity_name,
+        )
+        response = self.__request('get', url, params=params).get('response')
+        if response and response['success']:
+            return response['steamid']
+
     def get_player_summaries(self, steam_ids, **params):
-        if not type(steam_ids) == str:
+        if type(steam_ids) not in (str, unicode):
             steam_ids = ','.join(map(str, steam_ids))
 
         url = '/ISteamUser/GetPlayerSummaries/v0002'
         params.update(
-            steams_ids=steam_ids,
+            steamids=steam_ids,
         )
-        return self.__request('get', url, params=params)
+        return (self.__request('get', url, params=params)
+                .get('response', {})
+                .get('players', []))
 
     def get_heroes(self, **params):
         url = '/IEconDOTA2_570/GetHeroes/v0001'
-        return self.__request('get', url, params=params)
+        return (self.__request('get', url, params=params)
+                .get('result', {})
+                .get('heroes', []))
 
     def get_match_history(self, player_name=None, hero_id=None, game_mode=None,
                           skill=0, date_min=None, date_max=None,
@@ -205,7 +222,7 @@ class Dota2API(object):
                 req_count += 1
             matches_requested = 25
         else:
-            req_count, last_req = 1, 25
+            req_count, last_req = 1, matches_requested
 
         url = '/IDOTA2Match_570/GetMatchHistory/v001'
         params.update(
@@ -227,25 +244,27 @@ class Dota2API(object):
         for i in range(req_count):
             if i + 1 == req_count and last_req > 0:
                 params.update(matches_requested=last_req)
-            result = self.__request('get', url, params=params)
-            curr_matches = result.get('matches')
+            response = self.__request('get', url, params=params)
+            if response['result']['status'] != 1:
+                raise Dota2APIError(response['result']['statusDetail'])
+            curr_matches = response['result']['matches']
             if len(curr_matches) > 0:
                 params.update(
-                    start_at_match_id=curr_matches[-1].get('match_id') - 1,
+                    start_at_match_id=curr_matches[-1]['match_id'] - 1,
                 )
             matches.extend(curr_matches)
-            if result.get('results_remaining') < 1:
+            if response['result']['results_remaining'] < 1:
                 break
 
-        result.update(
+        response['result'].update(
             matches=matches,
             num_results=len(matches),
         )
-        return result
+        return response['result']
 
     def get_match_details(self, match_id, **params):
         url = '/IDOTA2Match_570/GetMatchDetails/v001'
         params.update(
             match_id=match_id,
         )
-        return self.__request('get', url, params=params)
+        return self.__request('get', url, params=params).get('result')

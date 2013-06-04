@@ -1,12 +1,35 @@
 dota2.py
 ========
 
-A minimalistic library used to interact with [DotA 2](http://blog.dota2.com/)'s
-(Defense of the Ancients) [WebAPI](http://dev.dota2.com/forumdisplay.php?f=411).
+A minimalistic (but aiming to be comprehensive) library used to interact with
+[Dota 2](http://blog.dota2.com/)'s (Defense of the Ancients)
+[WebAPI](http://dev.dota2.com/forumdisplay.php?f=411).
+
+Usage
+-----
+
+First off, you'll need a Steam account. Once you have that you can sign up for
+an [API key](http://steamcommunity.com/dev/apikey). Make sure to keep this key
+safe (e.g., not committing it to a public repository) as Valve is pretty strict
+about API access and rate limiting. We'd reccomend throwing it in an environment
+variable.
+
+Here's how you use it:
+
+    >>> from dota2 import Dota2API
+    >>> api = DOTA2API(api_key='<your-api-key>')
+    >>> api.get_steam_id('avalonstar')
+    u'76561198009545200'
+
+Installation
+------------
+
+It's easy and foolproof! You don't even have to worry about feeding!
+
+    pip install dota2
 
 API
 ---
-
 
 ### `Dota2API.get_steam_id(vanity_name, **params)`
 

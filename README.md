@@ -1,6 +1,9 @@
 dota2.py
 ========
 
+A minimalistic library used to interact with [DotA 2](http://blog.dota2.com/)'s
+(Defense of the Ancients) [WebAPI](http://dev.dota2.com/forumdisplay.php?f=411).
+
 API
 ---
 

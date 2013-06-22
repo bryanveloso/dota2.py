@@ -134,6 +134,26 @@ MATCH_GAME_MODES = (
 )
 
 
+class Hero(object):
+
+    images_url = 'http://media.steampowered.com/apps/dota2/images/heroes/{}'
+
+    def __init__(self, **kwargs):
+        for n, v in kwargs.items():
+            setattr(self, n, v)
+
+    def __repr__(self):
+        return getattr(self, 'localized_name', self.name)
+
+    @property
+    def full_image(self):
+        return self.images_url.format(self.name[14:] + '_full.png')
+
+    @property
+    def thumbnail_image(self):
+        return self.images_url.format(self.name[14:] + '_sb.png')
+
+
 class Dota2APIError(Exception):
     pass
 
@@ -182,11 +202,14 @@ class Dota2API(object):
                 .get('players', []))
 
     def get_heroes(self, **params):
+        """Get up to date list of heroes"""
         path = '/IEconDOTA2_570/GetHeroes/v0001'
         params.setdefault('language', 'en_us')
-        return (self.__request('get', path, params=params)
-                .get('result', {})
-                .get('heroes', []))
+        heroes = (self.__request('get', path, params=params)
+                  .get('result', {})
+                  .get('heroes', []))
+        for hero_attrs in heroes:
+            yield Hero(**hero_attrs)
 
     def get_match_history(self, player_name=None, hero_id=None, game_mode=None,
                           skill=0, date_min=None, date_max=None,

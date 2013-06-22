@@ -183,6 +183,7 @@ class Dota2API(object):
 
     def get_heroes(self, **params):
         path = '/IEconDOTA2_570/GetHeroes/v0001'
+        params.setdefault('language', 'en_us')
         return (self.__request('get', path, params=params)
                 .get('result', {})
                 .get('heroes', []))

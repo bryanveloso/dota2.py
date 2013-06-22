@@ -148,8 +148,8 @@ class Dota2API(object):
         if base_url:
             self.base_url = base_url
 
-    def __request(self, method, url, **kwargs):
-        url = self.base_url + url
+    def __request(self, method, path, **kwargs):
+        url = self.base_url + path
         if not self.api_key:
             raise AttributeError('api_key not yet set')
         kwargs.setdefault('params', dict()).update(key=self.api_key)
@@ -161,11 +161,11 @@ class Dota2API(object):
         return int(date)
 
     def get_steam_id(self, vanity_name, **params):
-        url = '/ISteamUser/ResolveVanityURL/v0001'
+        path = '/ISteamUser/ResolveVanityURL/v0001'
         params.update(
             vanityurl=vanity_name,
         )
-        response = self.__request('get', url, params=params).get('response')
+        response = self.__request('get', path, params=params).get('response')
         if response and response['success']:
             return response['steamid']
 
@@ -173,17 +173,17 @@ class Dota2API(object):
         if type(steam_ids) not in (str, unicode):
             steam_ids = ','.join(map(str, steam_ids))
 
-        url = '/ISteamUser/GetPlayerSummaries/v0002'
+        path = '/ISteamUser/GetPlayerSummaries/v0002'
         params.update(
             steamids=steam_ids,
         )
-        return (self.__request('get', url, params=params)
+        return (self.__request('get', path, params=params)
                 .get('response', {})
                 .get('players', []))
 
     def get_heroes(self, **params):
-        url = '/IEconDOTA2_570/GetHeroes/v0001'
-        return (self.__request('get', url, params=params)
+        path = '/IEconDOTA2_570/GetHeroes/v0001'
+        return (self.__request('get', path, params=params)
                 .get('result', {})
                 .get('heroes', []))
 
@@ -224,7 +224,7 @@ class Dota2API(object):
         else:
             req_count, last_req = 1, matches_requested
 
-        url = '/IDOTA2Match_570/GetMatchHistory/v001'
+        path = '/IDOTA2Match_570/GetMatchHistory/v001'
         params.update(
             player_name=player_name,
             hero_id=hero_id,
@@ -244,7 +244,7 @@ class Dota2API(object):
         for i in range(req_count):
             if i + 1 == req_count and last_req > 0:
                 params.update(matches_requested=last_req)
-            response = self.__request('get', url, params=params)
+            response = self.__request('get', path, params=params)
             if response['result']['status'] != 1:
                 raise Dota2APIError(response['result']['statusDetail'])
             curr_matches = response['result']['matches']
@@ -263,20 +263,20 @@ class Dota2API(object):
         return response['result']
 
     def get_match_details(self, match_id, **params):
-        url = '/IDOTA2Match_570/GetMatchDetails/v001'
+        path = '/IDOTA2Match_570/GetMatchDetails/v001'
         params.update(
             match_id=match_id,
         )
-        return self.__request('get', url, params=params).get('result')
+        return self.__request('get', path, params=params).get('result')
 
     def get_league_listing(self):
-        url = '/IDOTA2Match_570/GetLeagueListing/v001'
-        return (self.__request('get', url)
+        path = '/IDOTA2Match_570/GetLeagueListing/v001'
+        return (self.__request('get', path)
                 .get('result', {})
                 .get('leagues', []))
 
     def get_live_league_games(self):
-        url = '/IDOTA2Match_570/GetLiveLeagueGames/v001'
-        return (self.__request('get', url)
+        path = '/IDOTA2Match_570/GetLiveLeagueGames/v001'
+        return (self.__request('get', path)
                 .get('result', {})
                 .get('games', []))

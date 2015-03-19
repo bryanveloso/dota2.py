@@ -17,7 +17,7 @@ variable.
 Here's how you use it:
 
     >>> from dota2 import Dota2API
-    >>> api = DOTA2API(api_key='<your-api-key>')
+    >>> api = Dota2API(api_key='<your-api-key>')
     >>> api.get_steam_id('avalonstar')
     u'76561198009545200'
 
